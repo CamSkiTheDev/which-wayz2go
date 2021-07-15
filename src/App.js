@@ -157,7 +157,7 @@ function App() {
   return (
     <Main>
       <div className="wrapper">
-        <h1 className="application-title">VRO Route Optimizer</h1>
+        <h1 className="application-title">Which Wayz2Go</h1>
         <Form onSubmit={handleSubmit}>
           <Input
             type="address"
