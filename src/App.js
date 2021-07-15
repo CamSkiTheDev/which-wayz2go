@@ -7,11 +7,12 @@ const Main = styled.div`
   padding: 0 0.5em;
   width: 100%;
   min-height: 100vh;
-  background: #f72585;
+  background: #3e3e3e;
   display: flex;
   flex-direction: column;
   align-items: center;
   .wrapper {
+    padding: 0.5em 0;
     max-width: 64em;
     width: 100%;
     display: flex;
@@ -121,6 +122,36 @@ function App() {
       ...prevState,
       locations: [...prevState.locations, formData],
     }));
+    setFormData({
+      address: "",
+    });
+  };
+
+  const OptimizeRoute = async () => {
+    const optimizationResponse = await fetch(`https://vro.herokuapp.com/vrp/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        locations: addresses.locations.map((location) => ({
+          address: location.address,
+        })),
+      }),
+    }).then((res) => res.json());
+
+    if (!optimizationResponse.waypoints)
+      return alert("Unable to optimize route");
+
+    const addressData = addresses.locations
+      .map((address, index) => ({
+        ...address,
+        waypoint: optimizationResponse.waypoints[index],
+      }))
+      .sort((a, b) => a.waypoint.waypoint_index - b.waypoint.waypoint_index);
+
+    console.log(addressData);
+    setAddresses({ locations: addressData });
+
+    alert("Route optimized");
   };
 
   return (
@@ -139,17 +170,39 @@ function App() {
             Add To Route
           </Button>
         </Form>
-        {addresses.locations.map((location) => (
-          <Card>
+        {addresses.locations.map((location, index) => (
+          <Card key={index}>
             <span className="address-span">{location.address}</span>
             <div className="btn-container">
-              <Button>Navigate</Button>
-              <Button buttonType="Danger">Remove</Button>
+              <Button
+                onClick={() =>
+                  window.open(`maps:q=${location.address}`, "_blank")
+                }
+              >
+                Navigate
+              </Button>
+              <Button
+                onClick={() =>
+                  setAddresses((prevState) => ({
+                    ...prevState,
+                    locations: prevState.locations.filter(
+                      (x) => x.address !== location.address
+                    ),
+                  }))
+                }
+                buttonType="Danger"
+              >
+                Remove
+              </Button>
             </div>
           </Card>
         ))}
         {addresses.locations.length > 1 ? (
-          <Button buttonMaxWidth="full" buttonType="Primary">
+          <Button
+            onClick={OptimizeRoute}
+            buttonMaxWidth="full"
+            buttonType="Primary"
+          >
             Optimize Route
           </Button>
         ) : null}
