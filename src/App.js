@@ -110,6 +110,9 @@ function App() {
     address: "",
   });
 
+  const saveData = (data) =>
+    localStorage.setItem("Route", JSON.stringify(data));
+
   const handleChange = (e) =>
     setFormData((prevState) => ({
       ...prevState,
@@ -118,10 +121,16 @@ function App() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setAddresses((prevState) => ({
-      ...prevState,
-      locations: [...prevState.locations, formData],
-    }));
+    setAddresses((prevState) => {
+      const newState = {
+        ...prevState,
+        locations: [...prevState.locations, formData],
+      };
+
+      saveData(newState);
+
+      return newState;
+    });
     setFormData({
       address: "",
     });
@@ -148,11 +157,16 @@ function App() {
       }))
       .sort((a, b) => a.waypoint.waypoint_index - b.waypoint.waypoint_index);
 
-    console.log(addressData);
     setAddresses({ locations: addressData });
+    saveData({ locations: addressData });
 
     alert("Route optimized");
   };
+
+  useEffect(() => {
+    const localRoute = localStorage.getItem("Route");
+    if (localRoute) setAddresses(JSON.parse(localRoute));
+  }, []);
 
   return (
     <Main>
@@ -183,12 +197,18 @@ function App() {
               </Button>
               <Button
                 onClick={() =>
-                  setAddresses((prevState) => ({
-                    ...prevState,
-                    locations: prevState.locations.filter(
-                      (x) => x.address !== location.address
-                    ),
-                  }))
+                  setAddresses((prevState) => {
+                    const newState = {
+                      ...prevState,
+                      locations: prevState.locations.filter(
+                        (x) => x.address !== location.address
+                      ),
+                    };
+
+                    saveData(newState);
+
+                    return newState;
+                  })
                 }
                 buttonType="Danger"
               >
